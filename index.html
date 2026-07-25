@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Puzzle Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: #f1f5f9; }
+        .tile {
+            transition: transform 0.2s ease;
+            background-image: url('b.jpeg');
+            background-size: 400% 400%;
+            cursor: pointer;
+        }
+        .empty { background-image: none !important; background-color: #1e293b; cursor: default; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="max-w-md w-full bg-slate-800 rounded-2xl shadow-xl p-6 flex flex-col items-center">
+        <h1 class="text-2xl font-bold mb-4 text-emerald-400">Puzzle Challenge</h1>
+        
+        <div class="w-full flex justify-between items-center mb-4">
+            <p class="text-slate-400">Moves: <span id="moves" class="font-bold text-white">0</span></p>
+            <button id="shuffleBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-semibold text-sm transition">Restart Game</button>
+        </div>
+
+        <div id="board" class="grid w-full aspect-square border-4 border-slate-700 bg-slate-700 gap-1 rounded-lg"></div>
+    </div>
+
+    <script>
+        const gridSize = 4;
+        let tiles = Array.from({ length: gridSize * gridSize }, (_, i) => i);
+        let moves = 0;
+        const board = document.getElementById('board');
+        const movesEl = document.getElementById('moves');
+
+        function drawBoard() {
+            board.innerHTML = '';
+            board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            
+            tiles.forEach((val, index) => {
+                const div = document.createElement('div');
+                div.className = `tile ${val === (gridSize * gridSize - 1) ? 'empty' : ''}`;
+                
+                if (val !== (gridSize * gridSize - 1)) {
+                    const row = Math.floor(val / gridSize);
+                    const col = val % gridSize;
+                    div.style.backgroundPosition = `${(col / (gridSize - 1)) * 100}% ${(row / (gridSize - 1)) * 100}%`;
+                    div.onclick = () => moveTile(index);
+                }
+                board.appendChild(div);
+            });
+        }
+
+        function moveTile(index) {
+            const emptyIdx = tiles.indexOf(gridSize * gridSize - 1);
+            const row = Math.floor(index / gridSize);
+            const col = index % gridSize;
+            const emptyRow = Math.floor(emptyIdx / gridSize);
+            const emptyCol = emptyIdx % gridSize;
+
+            if (Math.abs(row - emptyRow) + Math.abs(col - emptyCol) === 1) {
+                [tiles[index], tiles[emptyIdx]] = [tiles[emptyIdx], tiles[index]];
+                moves++;
+                movesEl.textContent = moves;
+                drawBoard();
+            }
+        }
+
+        function shuffle() {
+            for (let i = 0; i < 200; i++) {
+                const emptyIdx = tiles.indexOf(gridSize * gridSize - 1);
+                const neighbors = [];
+                const r = Math.floor(emptyIdx / gridSize), c = emptyIdx % gridSize;
+                if (r > 0) neighbors.push(emptyIdx - gridSize);
+                if (r < gridSize - 1) neighbors.push(emptyIdx + gridSize);
+                if (c > 0) neighbors.push(emptyIdx - 1);
+                if (c < gridSize - 1) neighbors.push(emptyIdx + 1);
+                const rand = neighbors[Math.floor(Math.random() * neighbors.length)];
+                [tiles[emptyIdx], tiles[rand]] = [tiles[rand], tiles[emptyIdx]];
+            }
+            moves = 0;
+            movesEl.textContent = moves;
+            drawBoard();
+        }
+
+        document.getElementById('shuffleBtn').onclick = shuffle;
+        shuffle();
+    </script>
+</body>
+</html>
