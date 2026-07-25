@@ -8,12 +8,11 @@
     <style>
         body { background-color: #0f172a; color: #f1f5f9; }
         .tile {
-            transition: transform 0.2s ease;
-            background-image: url('b.jpeg');
-            background-size: 400% 400%;
+            transition: transform 0.1s ease;
             cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .empty { background-image: none !important; background-color: #1e293b; cursor: default; }
+        .empty { background-color: #1e293b !important; cursor: default; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
@@ -21,22 +20,43 @@
     <div class="max-w-md w-full bg-slate-800 rounded-2xl shadow-xl p-6 flex flex-col items-center">
         <h1 class="text-2xl font-bold mb-4 text-emerald-400">Puzzle Challenge</h1>
         
-        <div class="w-full flex justify-between items-center mb-4">
-            <p class="text-slate-400">Moves: <span id="moves" class="font-bold text-white">0</span></p>
-            <button id="shuffleBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-semibold text-sm transition">Restart Game</button>
+        <!-- File Uploader -->
+        <div class="w-full mb-4">
+            <label class="block text-sm text-slate-400 mb-2">Upload your photo:</label>
+            <input type="file" id="imageLoader" accept="image/*" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer">
         </div>
 
-        <div id="board" class="grid w-full aspect-square border-4 border-slate-700 bg-slate-700 gap-1 rounded-lg"></div>
+        <div class="w-full flex justify-between items-center mb-4">
+            <p class="text-slate-400">Moves: <span id="moves" class="font-bold text-white">0</span></p>
+            <button id="shuffleBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-semibold text-sm transition">Restart / Shuffle</button>
+        </div>
+
+        <div id="board" class="grid w-full aspect-square border-4 border-slate-700 bg-slate-700 gap-0.5 rounded-lg overflow-hidden">
+            <!-- Game will load here -->
+            <div class="flex items-center justify-center h-full text-slate-500">Upload an image to start!</div>
+        </div>
     </div>
 
     <script>
         const gridSize = 4;
         let tiles = Array.from({ length: gridSize * gridSize }, (_, i) => i);
         let moves = 0;
+        let imageUrl = '';
         const board = document.getElementById('board');
         const movesEl = document.getElementById('moves');
+        const imageLoader = document.getElementById('imageLoader');
+
+        imageLoader.addEventListener('change', function(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                imageUrl = event.target.result;
+                shuffle();
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        });
 
         function drawBoard() {
+            if (!imageUrl) return;
             board.innerHTML = '';
             board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
             
@@ -47,6 +67,8 @@
                 if (val !== (gridSize * gridSize - 1)) {
                     const row = Math.floor(val / gridSize);
                     const col = val % gridSize;
+                    div.style.backgroundImage = `url('${imageUrl}')`;
+                    div.style.backgroundSize = `${gridSize * 100}% ${gridSize * 100}%`;
                     div.style.backgroundPosition = `${(col / (gridSize - 1)) * 100}% ${(row / (gridSize - 1)) * 100}%`;
                     div.onclick = () => moveTile(index);
                 }
@@ -70,6 +92,7 @@
         }
 
         function shuffle() {
+            tiles = Array.from({ length: gridSize * gridSize }, (_, i) => i);
             for (let i = 0; i < 200; i++) {
                 const emptyIdx = tiles.indexOf(gridSize * gridSize - 1);
                 const neighbors = [];
@@ -87,7 +110,6 @@
         }
 
         document.getElementById('shuffleBtn').onclick = shuffle;
-        shuffle();
     </script>
 </body>
 </html>
